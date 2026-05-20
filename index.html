@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracker Keuangan Extended</title>
+    <!-- Kode PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4F46E5">
+    <link rel="apple-touch-icon" href="icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4F46E5; 
+            --primary-hover: #4338CA;
+            --success: #10B981; 
+            --danger: #EF4444;  
+            --bg-color: #F3F4F6;
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --text-muted: #6B7280;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-main);
+            margin: 0; 
+            padding: 20px 20px 80px 20px; 
+        }
+
+        .card { 
+            background: var(--card-bg); 
+            padding: 20px; 
+            border-radius: 16px; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-bottom: 20px; 
+        }
+
+        .saldo-title { color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .saldo-amount { font-size: 26px; font-weight: 700; margin: 0; letter-spacing: -0.5px; }
+
+        .btn { border: none; padding: 12px 20px; font-size: 15px; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; transition: all 0.2s ease; }
+        .btn:active { transform: scale(0.98); } 
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-secondary { background-color: #E5E7EB; color: var(--text-main); padding: 10px; font-size: 13px; margin-bottom: 15px; }
+        .btn-secondary:hover { background-color: #D1D5DB; }
+        .btn-success { background-color: var(--success); color: white; margin-bottom: 10px; }
+        .btn-danger { background-color: var(--danger); color: white; margin-bottom: 0; }
+        .btn-outline-danger { background-color: transparent; border: 1px solid var(--danger); color: var(--danger); margin-top: 20px; }
+
+        .input-group { margin-bottom: 16px; text-align: left; }
+        .input-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+        .input-field { width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #D1D5DB; font-size: 15px; font-family: inherit; box-sizing: border-box; background-color: #F9FAFB; transition: border-color 0.2s; }
+        .input-field:focus { outline: none; border-color: var(--primary); background-color: white; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        select.input-field { appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 14px top 50%; background-size: 12px auto; }
+
+        .fab { position: fixed; bottom: 30px; right: 30px; background-color: var(--primary); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4); cursor: pointer; border: none; z-index: 100; transition: transform 0.2s ease; }
+        .fab:hover { transform: translateY(-3px) scale(1.05); }
+        .fab:active { transform: scale(0.95); }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(17, 24, 39, 0.6); backdrop-filter: blur(2px); z-index: 900; animation: fadeIn 0.2s ease-out; }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 400px; z-index: 999; background: var(--card-bg); border-radius: 20px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translate(-50%, -45%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+        .riwayat-item { background: white; padding: 16px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.05); animation: slideInRight 0.3s ease-out; }
+        .riwayat-kategori { font-weight: 600; font-size: 15px; color: var(--text-main); margin-bottom: 2px; }
+        .riwayat-waktu { font-size: 11px; color: #9CA3AF; margin-bottom: 4px; display: block; }
+        .riwayat-catatan { font-size: 13px; color: var(--text-muted); }
+        .riwayat-nominal { font-weight: 700; font-size: 16px; text-align: right; }
+        
+        .btn-hapus { background: transparent; border: none; color: #D1D5DB; font-size: 24px; cursor: pointer; padding: 0 0 0 12px; transition: color 0.2s; line-height: 1; }
+        .btn-hapus:hover { color: var(--danger); }
+
+    </style>
+</head>
+<body>
+
+    <h2 style="margin-top: 0; margin-bottom: 20px; font-size: 20px; color: var(--text-main); letter-spacing: -0.5px;">💰 Tracker Extended</h2>
+
+    <div style="display: flex; gap: 12px; margin-bottom: 15px;">
+        <div class="card" style="flex: 1; margin-bottom: 0; padding: 16px; border-left: 4px solid var(--primary);">
+            <div class="saldo-title">Saldo Utama</div>
+            <div class="saldo-amount" id="saldo-utama-text" style="color: var(--primary);">Rp 0</div>
+        </div>
+        
+        <div class="card" style="flex: 1; margin-bottom: 0; padding: 16px; background-color: #ECFDF5; border-left: 4px solid var(--success);">
+            <div class="saldo-title" id="judul-celengan" style="color: #059669;">Tabungan (0%)</div>
+            <div class="saldo-amount" id="celengan-text" style="color: var(--success); font-size: 20px;">Rp 0</div>
+        </div>
+    </div>
+
+    <button class="btn btn-secondary" onclick="bukaSetting()">⚙️ Pengaturan Tabungan</button>
+
+    <div style="margin-top: 10px;">
+        <h4 style="color: var(--text-muted); font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">Riwayat Hari Ini</h4>
+        <div id="riwayat-list"></div>
+        <button class="btn btn-outline-danger" onclick="resetData()">Reset Semua Data</button>
+    </div>
+
+    <button class="fab" onclick="bukaForm()">+</button>
+    <div class="modal-overlay" id="overlay"></div>
+
+    <div id="formModal" class="modal">
+        <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 18px;">Catat Transaksi Baru</h3>
+        
+        <div class="input-group">
+            <label>Nominal (Rp)</label>
+            <input type="number" id="nominal" class="input-field" placeholder="0">
+        </div>
+        
+        <div class="input-group">
+            <label>Kategori</label>
+            <select id="kategori" class="input-field">
+                <option value="pemasukan">Pemasukan (Gaji/Pendapatan)</option>
+                <option value="transport">Transportasi & Parkir</option>
+                <option value="makan">Makan & Minum</option>
+                <option value="tarik_tabungan">Tarik Tabungan / Darurat</option>
+                <option value="hiburan">Hobi & Hiburan</option>
+                <option value="lainnya">Kebutuhan Lainnya</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Catatan Singkat</label>
+            <input type="text" id="catatan" class="input-field" placeholder="Cth: Beli bensin">
+        </div>
+        
+        <button class="btn btn-success" onclick="simpanTransaksi()">Simpan Transaksi</button>
+        <button class="btn btn-secondary" style="margin-bottom:0; background-color: transparent;" onclick="tutupForm()">Batal</button>
+    </div>
+
+    <div id="settingModal" class="modal">
+        <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 18px;">Pengaturan Auto-Simpan</h3>
+        
+        <div class="input-group">
+            <label>Potong Otomatis (%) dari Pemasukan</label>
+            <input type="number" id="input-persentase" class="input-field" placeholder="Cth: 10">
+        </div>
+        
+        <button class="btn btn-primary" onclick="simpanSetting()">Simpan Pengaturan</button>
+        <button class="btn btn-secondary" style="margin-bottom:0; background-color: transparent;" onclick="tutupSetting()">Batal</button>
+    </div>
+
+    <script>
+        let riwayatData = JSON.parse(localStorage.getItem('riwayatData')) || [];
+        let persentasePotongan = localStorage.getItem('persenTersimpan') !== null ? parseInt(localStorage.getItem('persenTersimpan')) : 10;
+        let saldo = 0;
+        let celengan = 0; 
+
+        // Fungsi mendapatkan waktu sekarang format Indonesia
+        function dapatkanWaktuSekarang() {
+            let sekarang = new Date();
+            let opsi = { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+            // Hasilnya akan seperti "20 Mei 2026, 19.15"
+            return sekarang.toLocaleDateString('id-ID', opsi).replace(/\./g, ':'); 
+        }
+
+        function kalkulasiUlangSaldo() {
+            saldo = 0;
+            celengan = 0;
+            
+            let riwayatLamaKeBaru = [...riwayatData].reverse();
+
+            riwayatLamaKeBaru.forEach(trx => {
+                if (trx.kategoriAsli === 'pemasukan') {
+                    saldo += trx.nominal;
+                } else if (trx.kategoriAsli === 'auto_simpan') {
+                    saldo -= trx.nominal;
+                    celengan += trx.nominal;
+                } else if (trx.kategoriAsli === 'tarik_tabungan') {
+                    if (trx.nominal <= celengan) {
+                        celengan -= trx.nominal;
+                    } else {
+                        let sisa = trx.nominal - celengan;
+                        celengan = 0;
+                        saldo -= sisa;
+                    }
+                } else {
+                    saldo -= trx.nominal;
+                }
+            });
+
+            document.getElementById('saldo-utama-text').innerText = 'Rp ' + saldo.toLocaleString('id-ID');
+            document.getElementById('celengan-text').innerText = 'Rp ' + celengan.toLocaleString('id-ID');
+            document.getElementById('judul-celengan').innerText = 'Tabungan (' + persentasePotongan + '%)';
+        }
+
+        function renderRiwayatKeLayar() {
+            let html = "";
+            riwayatData.forEach(trx => {
+                // Tambahkan validasi trx.waktu untuk jaga-jaga kalau ada data lama yang belum punya waktu
+                let teksWaktu = trx.waktu ? trx.waktu : 'Waktu tidak tercatat';
+
+                html += `
+                    <div class="riwayat-item" style="border-left-color: ${trx.warnaAksen};">
+                        <div style="flex: 1;">
+                            <div class="riwayat-kategori">${trx.label}</div>
+                            <span class="riwayat-waktu">🕒 ${teksWaktu}</span>
+                            <div class="riwayat-catatan">${trx.catatan || '-'}</div>
+                        </div>
+                        <div class="riwayat-nominal" style="color: ${trx.warnaAksen};">
+                            ${trx.tanda} Rp ${trx.nominal.toLocaleString('id-ID')}
+                        </div>
+                        <button class="btn-hapus" onclick="hapusSatuTransaksi(${trx.id})">&times;</button>
+                    </div>
+                `;
+            });
+            document.getElementById('riwayat-list').innerHTML = html;
+        }
+
+        function muatDataAwal() {
+            kalkulasiUlangSaldo();
+            renderRiwayatKeLayar();
+        }
+        muatDataAwal();
+
+        function bukaForm() { document.getElementById('overlay').style.display = 'block'; document.getElementById('formModal').style.display = 'block'; }
+        function tutupForm() { document.getElementById('overlay').style.display = 'none'; document.getElementById('formModal').style.display = 'none'; }
+        function bukaSetting() { document.getElementById('input-persentase').value = persentasePotongan; document.getElementById('overlay').style.display = 'block'; document.getElementById('settingModal').style.display = 'block'; }
+        function tutupSetting() { document.getElementById('overlay').style.display = 'none'; document.getElementById('settingModal').style.display = 'none'; }
+
+        function simpanSetting() {
+            let nilaiBaru = parseInt(document.getElementById('input-persentase').value);
+            if (isNaN(nilaiBaru) || nilaiBaru < 0 || nilaiBaru > 100) { alert("Masukkan angka 0-100!"); return; }
+            persentasePotongan = nilaiBaru;
+            localStorage.setItem('persenTersimpan', persentasePotongan); 
+            kalkulasiUlangSaldo();
+            tutupSetting();
+        }
+
+        function simpanTransaksi() {
+            let nominal = parseInt(document.getElementById('nominal').value);
+            let kategori = document.getElementById('kategori').value;
+            let catatan = document.getElementById('catatan').value;
+            let labelKategori = document.getElementById('kategori').options[document.getElementById('kategori').selectedIndex].text;
+
+            if (isNaN(nominal) || nominal <= 0) { alert('Masukkan nominal yang valid!'); return; }
+
+            let idUnik = Date.now(); 
+            let waktuSekarang = dapatkanWaktuSekarang(); // Ambil waktu saat tombol simpan dipencet
+
+            if (kategori === 'pemasukan') {
+                riwayatData.unshift({ id: idUnik, kategoriAsli: 'pemasukan', label: labelKategori, catatan: catatan, nominal: nominal, warnaAksen: '#10B981', tanda: '+', waktu: waktuSekarang });
+
+                let potongan = nominal * (persentasePotongan / 100);
+                if (potongan > 0) { 
+                    riwayatData.unshift({ id: idUnik + 1, kategoriAsli: 'auto_simpan', label: "Auto-Simpan", catatan: `Alokasi ${persentasePotongan}%`, nominal: potongan, warnaAksen: '#059669', tanda: '-', waktu: waktuSekarang });
+                }
+            } 
+            else if (kategori === 'tarik_tabungan') {
+                riwayatData.unshift({ id: idUnik, kategoriAsli: 'tarik_tabungan', label: labelKategori, catatan: catatan, nominal: nominal, warnaAksen: '#EF4444', tanda: '-', waktu: waktuSekarang });
+            } 
+            else {
+                riwayatData.unshift({ id: idUnik, kategoriAsli: kategori, label: labelKategori, catatan: catatan, nominal: nominal, warnaAksen: '#EF4444', tanda: '-', waktu: waktuSekarang });
+            }
+
+            localStorage.setItem('riwayatData', JSON.stringify(riwayatData));
+
+            kalkulasiUlangSaldo();
+            renderRiwayatKeLayar();
+
+            document.getElementById('nominal').value = '';
+            document.getElementById('catatan').value = '';
+            tutupForm();
+        }
+
+        function hapusSatuTransaksi(id) {
+            if (confirm("Yakin mau menghapus transaksi ini?")) {
+                riwayatData = riwayatData.filter(trx => trx.id !== id);
+                localStorage.setItem('riwayatData', JSON.stringify(riwayatData));
+                kalkulasiUlangSaldo();
+                renderRiwayatKeLayar();
+            }
+        }
+
+        function resetData() {
+            if (confirm("Hapus semua data bulan ini?")) {
+                localStorage.removeItem('riwayatData');
+                riwayatData = [];
+                kalkulasiUlangSaldo();
+                renderRiwayatKeLayar();
+            }
+        }
+    </script>
+</body>
+</html>
