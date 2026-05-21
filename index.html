@@ -3,288 +3,928 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracker Keuangan Extended</title>
-    <!-- Kode PWA -->
+    <title>Tracker Premium</title>
+    
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4F46E5">
+    <meta name="theme-color" content="#0F172A">
     <link rel="apple-touch-icon" href="icon.png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
         :root {
-            --primary: #4F46E5; 
-            --primary-hover: #4338CA;
+            --bg-dark: #0F172A; 
+            --card-glass: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --primary: #6366F1; 
+            --primary-glow: rgba(99, 102, 241, 0.4);
             --success: #10B981; 
-            --danger: #EF4444;  
-            --bg-color: #F3F4F6;
-            --card-bg: #FFFFFF;
-            --text-main: #1F2937;
-            --text-muted: #6B7280;
+            --danger: #F43F5E;
+            --text-main: #F8FAFC;
+            --text-dim: #94A3B8;
         }
 
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: var(--bg-color); 
-            color: var(--text-main);
-            margin: 0; 
-            padding: 20px 20px 80px 20px; 
+            font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-dark); color: var(--text-main); margin: 0; padding: 0; overflow-x: hidden;
+            background-image: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%), radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.1), transparent 25%);
+            background-attachment: fixed;
         }
 
-        .card { 
-            background: var(--card-bg); 
-            padding: 20px; 
-            border-radius: 16px; 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            margin-bottom: 20px; 
-        }
+        .app-container { padding: 24px 24px 100px 24px; }
+        .content-area { display: none; animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .content-area.active { display: block; }
 
-        .saldo-title { color: var(--text-muted); font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-        .saldo-amount { font-size: 26px; font-weight: 700; margin: 0; letter-spacing: -0.5px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .month-selector { display: flex; align-items: center; gap: 12px; }
+        .btn-month { background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); color: var(--primary); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s; }
+        .btn-month:active { transform: scale(0.9); background: rgba(255,255,255,0.1); }
+        .header h1 { font-size: 18px; font-weight: 700; margin: 0; min-width: 110px; text-align: center; }
+        
+        .user-avatar { width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary), #A855F7); border-radius: 12px; display: flex; justify-content: center; align-items: center; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3); transition: 0.2s; }
+        .user-avatar:active { transform: scale(0.9); }
 
-        .btn { border: none; padding: 12px 20px; font-size: 15px; font-weight: 600; border-radius: 12px; cursor: pointer; width: 100%; transition: all 0.2s ease; }
-        .btn:active { transform: scale(0.98); } 
-        .btn-primary { background-color: var(--primary); color: white; }
-        .btn-primary:hover { background-color: var(--primary-hover); }
-        .btn-secondary { background-color: #E5E7EB; color: var(--text-main); padding: 10px; font-size: 13px; margin-bottom: 15px; }
-        .btn-secondary:hover { background-color: #D1D5DB; }
-        .btn-success { background-color: var(--success); color: white; margin-bottom: 10px; }
-        .btn-danger { background-color: var(--danger); color: white; margin-bottom: 0; }
-        .btn-outline-danger { background-color: transparent; border: 1px solid var(--danger); color: var(--danger); margin-top: 20px; }
+        .glass-card { background: var(--card-glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--card-border); border-radius: 24px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); margin-bottom: 24px; position: relative; overflow: hidden; }
+        .glass-card::before { content: ''; position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: var(--primary); filter: blur(50px); opacity: 0.3; border-radius: 50%; }
 
-        .input-group { margin-bottom: 16px; text-align: left; }
-        .input-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
-        .input-field { width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #D1D5DB; font-size: 15px; font-family: inherit; box-sizing: border-box; background-color: #F9FAFB; transition: border-color 0.2s; }
-        .input-field:focus { outline: none; border-color: var(--primary); background-color: white; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
-        select.input-field { appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 14px top 50%; background-size: 12px auto; }
+        .balance-label { font-size: 13px; color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+        .balance-amount { font-size: 36px; font-weight: 800; margin: 0 0 24px 0; letter-spacing: -1px; }
 
-        .fab { position: fixed; bottom: 30px; right: 30px; background-color: var(--primary); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4); cursor: pointer; border: none; z-index: 100; transition: transform 0.2s ease; }
-        .fab:hover { transform: translateY(-3px) scale(1.05); }
-        .fab:active { transform: scale(0.95); }
+        .stats-row { display: flex; justify-content: space-between; border-top: 1px solid var(--card-border); padding-top: 16px; }
+        .stat-box { flex: 1; }
+        .stat-box.right { text-align: right; }
+        .stat-label { font-size: 12px; color: var(--text-dim); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+        .stat-box.right .stat-label { justify-content: flex-end; }
+        .stat-value { font-size: 16px; font-weight: 700; }
+        .text-green { color: var(--success); }
+        .text-red { color: var(--danger); }
 
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(17, 24, 39, 0.6); backdrop-filter: blur(2px); z-index: 900; animation: fadeIn 0.2s ease-out; }
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 400px; z-index: 999; background: var(--card-bg); border-radius: 20px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .section-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+
+        .search-bar { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--card-border); background: rgba(15, 23, 42, 0.5); color: white; font-size: 14px; font-family: inherit; margin-bottom: 16px; box-sizing: border-box; outline: none; transition: 0.2s; }
+        .search-bar:focus { border-color: var(--primary); background: rgba(15, 23, 42, 0.8); }
+
+        .trx-item { background: rgba(15, 23, 42, 0.4); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .trx-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 18px; margin-right: 16px; flex-shrink: 0; }
+        .trx-icon.in { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .trx-icon.out { background: rgba(244, 63, 94, 0.1); color: var(--danger); }
+        .trx-icon.debt { background: rgba(99, 102, 241, 0.1); color: var(--primary); }
+        .trx-icon.sys { background: rgba(15, 23, 42, 0.6); color: #0EA5E9; }
+
+        .trx-info { flex: 1; overflow: hidden; }
+        .trx-title { font-weight: 600; font-size: 15px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .trx-date { font-size: 10px; color: var(--primary); margin-bottom: 2px; font-weight: 600; }
+        .trx-note { font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .trx-wallet-tag { font-size: 10px; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; display: inline-block; color: var(--text-main); }
+        
+        .trx-amount-box { text-align: right; flex-shrink: 0; margin-left: 10px; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; }
+        .trx-amount { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+        .action-buttons { display: flex; gap: 8px; }
+        .btn-action { background: transparent; border: none; font-size: 16px; cursor: pointer; padding: 4px; transition: color 0.2s; }
+        .btn-edit { color: var(--primary); } .btn-edit:hover { color: #A855F7; }
+        .btn-delete { color: #475569; } .btn-delete:hover { color: var(--danger); }
+
+        .btn-lunas { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--success); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-top: 4px; }
+        .btn-lunas:active { transform: scale(0.95); }
+        .badge-lunas { font-size: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); padding: 2px 6px; border-radius: 4px; color: var(--text-dim); display: inline-block; margin-top: 4px; }
+
+        .wallet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+        .wallet-card { background: rgba(15, 23, 42, 0.6); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; transition: transform 0.2s; position: relative; }
+        .wallet-icon { font-size: 24px; color: var(--primary); margin-bottom: 12px; }
+        .wallet-name { font-size: 13px; color: var(--text-dim); font-weight: 600; margin-bottom: 4px; }
+        .wallet-bal { font-size: 18px; font-weight: 700; }
+        .wallet-card.savings { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2); grid-column: 1 / -1; }
+        .wallet-card.savings .wallet-icon { color: var(--success); }
+        .btn-koreksi { position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.1); border: none; color: var(--text-dim); width: 28px; height: 28px; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 12px; transition: 0.2s; }
+        .btn-koreksi:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
+
+        .chart-container { position: relative; height: 220px; width: 100%; display: flex; justify-content: center; margin-bottom: 16px; }
+
+        .mini-list { background: rgba(15, 23, 42, 0.4); border: 1px solid var(--card-border); border-radius: 16px; padding: 8px 16px; margin-bottom: 16px; }
+        .mini-list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
+        .mini-list-item:last-child { border-bottom: none; }
+        .badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
+        .badge.in { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+        .badge.out { background: rgba(244, 63, 94, 0.15); color: var(--danger); }
+        .badge.sys { background: rgba(99, 102, 241, 0.15); color: var(--primary); }
+
+        .floating-nav { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 100px; display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; width: 90%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); z-index: 100; }
+        .nav-item { color: #475569; padding: 12px 16px; font-size: 20px; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; position: relative; }
+        .nav-item.active { color: var(--primary); background: rgba(99, 102, 241, 0.15); box-shadow: 0 0 15px rgba(99, 102, 241, 0.2); }
+        .nav-fab { background: linear-gradient(135deg, var(--primary), #A855F7); color: white; width: 48px; height: 48px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; box-shadow: 0 10px 20px var(--primary-glow); transform: translateY(-15px); border: 4px solid var(--bg-dark); cursor: pointer; }
+        
+        .setting-card { background: rgba(15, 23, 42, 0.4); border: 1px solid var(--card-border); border-radius: 16px; padding: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .3s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 999; animation: fadeIn 0.2s; }
+        .modal { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-dark); border-radius: 24px 24px 0 0; padding: 32px 24px; z-index: 1000; border-top: 1px solid var(--card-border); animation: slideUp 0.3s ease-out; }
+        .modal-drag-pill { width: 40px; height: 4px; background: #334155; border-radius: 4px; margin: 0 auto 24px auto; }
+        
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 8px; font-weight: 600; }
+        .input-field { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #334155; background: #1E293B; color: white; font-size: 15px; font-family: inherit; box-sizing: border-box; }
+        .input-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+        select.input-field { appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394A3B8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 16px top 50%; background-size: 12px auto; }
+        
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 16px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), #A855F7); color: white; margin-bottom: 12px; box-shadow: 0 8px 16px var(--primary-glow); }
+        .btn-secondary { background: transparent; color: var(--text-dim); }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { opacity: 0; transform: translate(-50%, -45%); } to { opacity: 1; transform: translate(-50%, -50%); } }
-        @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-
-        .riwayat-item { background: white; padding: 16px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.05); animation: slideInRight 0.3s ease-out; }
-        .riwayat-kategori { font-weight: 600; font-size: 15px; color: var(--text-main); margin-bottom: 2px; }
-        .riwayat-waktu { font-size: 11px; color: #9CA3AF; margin-bottom: 4px; display: block; }
-        .riwayat-catatan { font-size: 13px; color: var(--text-muted); }
-        .riwayat-nominal { font-weight: 700; font-size: 16px; text-align: right; }
-        
-        .btn-hapus { background: transparent; border: none; color: #D1D5DB; font-size: 24px; cursor: pointer; padding: 0 0 0 12px; transition: color 0.2s; line-height: 1; }
-        .btn-hapus:hover { color: var(--danger); }
-
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes slideUpFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <h2 style="margin-top: 0; margin-bottom: 20px; font-size: 20px; color: var(--text-main); letter-spacing: -0.5px;">💰 Tracker Extended</h2>
-
-    <div style="display: flex; gap: 12px; margin-bottom: 15px;">
-        <div class="card" style="flex: 1; margin-bottom: 0; padding: 16px; border-left: 4px solid var(--primary);">
-            <div class="saldo-title">Saldo Utama</div>
-            <div class="saldo-amount" id="saldo-utama-text" style="color: var(--primary);">Rp 0</div>
-        </div>
+    <div class="app-container">
         
-        <div class="card" style="flex: 1; margin-bottom: 0; padding: 16px; background-color: #ECFDF5; border-left: 4px solid var(--success);">
-            <div class="saldo-title" id="judul-celengan" style="color: #059669;">Tabungan (0%)</div>
-            <div class="saldo-amount" id="celengan-text" style="color: var(--success); font-size: 20px;">Rp 0</div>
+        <div class="header">
+            <div style="flex: 1;">
+                <div style="color: var(--text-dim); font-size: 12px; font-weight: 600; margin-bottom: 6px; letter-spacing: 1px; text-transform: uppercase;">Periode</div>
+                <div class="month-selector">
+                    <button class="btn-month" onclick="ubahBulan(-1)"><i class="fas fa-chevron-left"></i></button>
+                    <h1 id="judul-bulan">Mei 2026</h1>
+                    <button class="btn-month" onclick="ubahBulan(1)"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+            <div class="user-avatar" onclick="pindahTab('setting', 'Pengaturan')" title="Pengaturan">
+                <i class="fas fa-gear"></i>
+            </div>
         </div>
+
+        <div id="tab-transaksi" class="content-area active">
+            <div class="glass-card">
+                <div class="balance-label">Cashflow Bulan Ini</div>
+                <div class="balance-amount" id="txt-selisih">Rp 0</div>
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <div class="stat-label"><i class="fas fa-arrow-down text-green"></i> Uang Masuk</div>
+                        <div class="stat-value text-green" id="txt-pemasukan">Rp 0</div>
+                    </div>
+                    <div class="stat-box right">
+                        <div class="stat-label"><i class="fas fa-arrow-up text-red"></i> Uang Keluar</div>
+                        <div class="stat-value text-red" id="txt-pengeluaran">Rp 0</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section-title"><span>Riwayat Bulan Ini</span></div>
+            <input type="text" id="search-trx" class="search-bar" placeholder="🔍 Cari nama pengeluaran atau catatan..." onkeyup="renderRiwayat()">
+            
+            <div id="riwayat-list"></div>
+        </div>
+
+        <div id="tab-rekening" class="content-area">
+            <div class="section-title">Total Saldo Aktif (All Time)</div>
+            <div class="wallet-grid">
+                <div class="wallet-card savings">
+                    <button class="btn-koreksi" onclick="bukaModalKoreksi('Celengan')"><i class="fas fa-pencil-alt"></i></button>
+                    <div class="wallet-icon"><i class="fas fa-shield-alt"></i></div>
+                    <div class="wallet-name" id="label-celengan">Celengan Auto-Simpan</div>
+                    <div class="wallet-bal" id="bal-celengan">Rp 0</div>
+                </div>
+                <div class="wallet-card">
+                    <button class="btn-koreksi" onclick="bukaModalKoreksi('Tunai')"><i class="fas fa-pencil-alt"></i></button>
+                    <div class="wallet-icon" style="color: #F59E0B;"><i class="fas fa-money-bill-wave"></i></div>
+                    <div class="wallet-name">Uang Tunai</div>
+                    <div class="wallet-bal" id="bal-tunai">Rp 0</div>
+                </div>
+                <div class="wallet-card">
+                    <button class="btn-koreksi" onclick="bukaModalKoreksi('Gopay')"><i class="fas fa-pencil-alt"></i></button>
+                    <div class="wallet-icon" style="color: #00AED6;"><i class="fas fa-qrcode"></i></div>
+                    <div class="wallet-name">Gopay</div>
+                    <div class="wallet-bal" id="bal-gopay">Rp 0</div>
+                </div>
+                <div class="wallet-card">
+                    <button class="btn-koreksi" onclick="bukaModalKoreksi('Dana')"><i class="fas fa-pencil-alt"></i></button>
+                    <div class="wallet-icon" style="color: #108EE9;"><i class="fas fa-wallet"></i></div>
+                    <div class="wallet-name">Dana</div>
+                    <div class="wallet-bal" id="bal-dana">Rp 0</div>
+                </div>
+                <div class="wallet-card">
+                    <button class="btn-koreksi" onclick="bukaModalKoreksi('Jago')"><i class="fas fa-pencil-alt"></i></button>
+                    <div class="wallet-icon" style="color: #F97316;"><i class="fas fa-piggy-bank"></i></div>
+                    <div class="wallet-name">Jago</div>
+                    <div class="wallet-bal" id="bal-jago">Rp 0</div>
+                </div>
+                <div class="wallet-card">
+                    <button class="btn-koreksi" onclick="bukaModalKoreksi('BRI')"><i class="fas fa-university"></i></button>
+                    <div class="wallet-icon" style="color: #0284C7;"><i class="fas fa-university"></i></div>
+                    <div class="wallet-name">Bank BRI</div>
+                    <div class="wallet-bal" id="bal-bri">Rp 0</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-rekap" class="content-area">
+            <div class="glass-card" style="text-align: center;">
+                <h3 style="margin-top:0; font-size: 13px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px;">Pengeluaran Bulan Ini</h3>
+                <div class="chart-container"><canvas id="expenseChart"></canvas></div>
+                <h2 id="total-expense-chart" style="margin-top: 16px; margin-bottom: 0; font-size: 28px;">Rp 0</h2>
+            </div>
+            <div class="section-title">Detail Kategori</div>
+            <div id="rekap-breakdown"></div>
+        </div>
+
+        <div id="tab-hutang" class="content-area">
+            <div class="glass-card">
+                <div class="balance-label">Total Piutang (Uang Kamu di Orang)</div>
+                <div class="balance-amount text-green" id="txt-total-piutang" style="margin-bottom:16px;">Rp 0</div>
+                
+                <div style="border-top: 1px solid var(--card-border); padding-top:12px;">
+                    <div class="stat-label">Total Hutang Kamu Ke Orang</div>
+                    <div class="stat-value text-red" id="txt-total-hutang" style="font-size: 20px;">Rp 0</div>
+                </div>
+            </div>
+            <div class="section-title">Daftar Pinjaman Aktif</div>
+            <div id="kasbon-list"></div>
+        </div>
+
+        <div id="tab-setting" class="content-area">
+            <div class="section-title" style="margin-top: 10px;">Automasi Tabungan</div>
+            <div class="setting-card">
+                <div>
+                    <strong style="display: block; margin-bottom: 4px;">Auto-Simpan</strong>
+                    <span style="font-size: 12px; color: var(--text-dim);">Potong otomatis tiap pemasukan</span>
+                </div>
+                <label class="switch"><input type="checkbox" id="toggle-autosimpan" onchange="ubahStatusAutoSimpan()"><span class="slider"></span></label>
+            </div>
+            <div class="setting-card" id="menu-persen-tabungan" onclick="ubahPersenTabungan()" style="cursor: pointer;">
+                <div><strong style="display: block; margin-bottom: 4px;">Persentase Potongan</strong><span style="font-size: 12px; color: var(--text-dim);">Ketuk untuk mengubah</span></div>
+                <div style="font-weight: 700; color: var(--primary);" id="txt-persen-setting">10%</div>
+            </div>
+
+            <div class="section-title" style="margin-top: 32px;">Kelola Kategori Custom</div>
+            <div class="mini-list" id="setting-kategori-list"></div>
+            <div class="setting-card" style="flex-direction: column; align-items: stretch; gap: 12px;">
+                <strong style="font-size: 14px;">Tambah Kategori Baru</strong>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="input-nama-kategori" class="input-field" placeholder="Nama Kategori..." style="margin-bottom:0; padding:12px;">
+                    <select id="input-tipe-kategori" class="input-field" style="margin-bottom:0; padding:12px; width:130px; flex-shrink:0;">
+                        <option value="pengeluaran">Keluar</option>
+                        <option value="pemasukan">Masuk</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="tambahKategoriCustom()" style="margin-bottom:0; padding:12px; font-size:14px;">+ Daftarkan Kategori</button>
+            </div>
+
+            <div class="section-title" style="margin-top: 32px;">Laporan & Keamanan Data</div>
+            <div class="setting-card" onclick="exportCSV()" style="cursor: pointer; border-color: rgba(16, 185, 129, 0.3);">
+                <div>
+                    <strong style="display: block; margin-bottom: 4px; color: var(--success);"><i class="fas fa-file-excel" style="margin-right: 8px;"></i> Export Laporan (.csv)</strong>
+                    <span style="font-size: 12px; color: var(--text-dim);">Unduh riwayat untuk dibuka di Excel/Laptop</span>
+                </div>
+            </div>
+            <div class="setting-card" onclick="backupData()" style="cursor: pointer;">
+                <div><strong style="display: block; margin-bottom: 4px;"><i class="fas fa-download" style="color: var(--primary); margin-right: 8px;"></i> Backup Data (.json)</strong><span style="font-size: 12px; color: var(--text-dim);">Simpan data mentah ke HP untuk dipindahkan</span></div>
+            </div>
+            <div class="setting-card" onclick="document.getElementById('fileImport').click()" style="cursor: pointer;">
+                <div><strong style="display: block; margin-bottom: 4px;"><i class="fas fa-upload" style="color: var(--primary); margin-right: 8px;"></i> Restore Data</strong><span style="font-size: 12px; color: var(--text-dim);">Kembalikan riwayat dari file backup</span></div>
+            </div>
+            <input type="file" id="fileImport" style="display: none;" accept=".json" onchange="restoreData(event)">
+
+            <div class="section-title" style="margin-top: 32px;">Data Sistem</div>
+            <div class="setting-card" onclick="resetData()" style="cursor: pointer; border-color: rgba(244, 63, 94, 0.3);">
+                <div style="color: var(--danger);"><i class="fas fa-trash-alt" style="margin-right: 8px;"></i> Hapus Seluruh Data</div>
+            </div>
+        </div>
+
     </div>
 
-    <button class="btn btn-secondary" onclick="bukaSetting()">⚙️ Pengaturan Tabungan</button>
-
-    <div style="margin-top: 10px;">
-        <h4 style="color: var(--text-muted); font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">Riwayat Hari Ini</h4>
-        <div id="riwayat-list"></div>
-        <button class="btn btn-outline-danger" onclick="resetData()">Reset Semua Data</button>
+    <div class="floating-nav">
+        <div class="nav-item active" onclick="pindahTab('transaksi', 'Overview')"><i class="fas fa-home"></i></div>
+        <div class="nav-item" onclick="pindahTab('rekening', 'Alokasi Dompet')"><i class="fas fa-wallet"></i></div>
+        <div class="nav-fab" onclick="bukaFormTransaksi()"><i class="fas fa-plus"></i></div>
+        <div class="nav-item" onclick="pindahTab('rekap', 'Analytics')"><i class="fas fa-chart-pie"></i></div>
+        <div class="nav-item" onclick="pindahTab('hutang', 'Kasbon System')"><i class="fas fa-hand-holding-dollar"></i></div>
     </div>
 
-    <button class="fab" onclick="bukaForm()">+</button>
-    <div class="modal-overlay" id="overlay"></div>
+    <div class="modal-overlay" id="overlay" onclick="tutupSemuaModal()"></div>
 
-    <div id="formModal" class="modal">
-        <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 18px;">Catat Transaksi Baru</h3>
+    <div class="modal" id="formModal">
+        <div class="modal-drag-pill"></div>
+        <h3 id="form-title" style="margin-top: 0; margin-bottom: 24px; font-size: 20px;">Catat Transaksi</h3>
         
         <div class="input-group">
             <label>Nominal (Rp)</label>
             <input type="number" id="nominal" class="input-field" placeholder="0">
         </div>
-        
-        <div class="input-group">
-            <label>Kategori</label>
-            <select id="kategori" class="input-field">
-                <option value="pemasukan">Pemasukan (Gaji/Pendapatan)</option>
-                <option value="transport">Transportasi & Parkir</option>
-                <option value="makan">Makan & Minum</option>
-                <option value="tarik_tabungan">Tarik Tabungan / Darurat</option>
-                <option value="hiburan">Hobi & Hiburan</option>
-                <option value="lainnya">Kebutuhan Lainnya</option>
+
+        <div style="display: flex; gap: 12px;">
+            <div class="input-group" style="flex: 1;">
+                <label>Kategori</label>
+                <select id="kategori" class="input-field" onchange="cekKategori()"></select>
+            </div>
+            <div class="input-group" style="flex: 1;">
+                <label id="label-sumber">Sumber / Tujuan</label>
+                <select id="dompet" class="input-field">
+                    <option value="Tunai">Uang Tunai</option>
+                    <option value="Gopay">Gopay</option>
+                    <option value="Dana">Dana</option>
+                    <option value="Jago">Jago</option>
+                    <option value="BRI">Bank BRI</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="input-group" id="div-dompet-tujuan" style="display: none;">
+            <label>Ke Dompet Tujuan</label>
+            <select id="dompet-tujuan" class="input-field">
+                <option value="Tunai">Uang Tunai</option>
+                <option value="Gopay">Gopay</option>
+                <option value="Dana">Dana</option>
+                <option value="Jago">Jago</option>
+                <option value="BRI">Bank BRI</option>
             </select>
         </div>
 
-        <div class="input-group">
+        <div class="input-group" style="margin-bottom: 32px;">
             <label>Catatan Singkat</label>
-            <input type="text" id="catatan" class="input-field" placeholder="Cth: Beli bensin">
+            <input type="text" id="catatan" class="input-field" placeholder="Opsional...">
         </div>
         
-        <button class="btn btn-success" onclick="simpanTransaksi()">Simpan Transaksi</button>
-        <button class="btn btn-secondary" style="margin-bottom:0; background-color: transparent;" onclick="tutupForm()">Batal</button>
+        <button class="btn btn-primary" onclick="simpanTransaksi()">Simpan Transaksi</button>
+        <button class="btn btn-secondary" onclick="tutupSemuaModal()">Batal</button>
     </div>
 
-    <div id="settingModal" class="modal">
-        <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 18px;">Pengaturan Auto-Simpan</h3>
-        
-        <div class="input-group">
-            <label>Potong Otomatis (%) dari Pemasukan</label>
-            <input type="number" id="input-persentase" class="input-field" placeholder="Cth: 10">
+    <div class="modal" id="modalKoreksi">
+        <div class="modal-drag-pill"></div>
+        <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 20px;">Sesuaikan Saldo</h3>
+        <p id="koreksi-info" style="font-size: 13px; color: var(--text-dim); margin-bottom: 24px; line-height: 1.5;"></p>
+        <div class="input-group" style="margin-bottom: 32px;">
+            <label>Nominal Saldo Sebenarnya (Rp)</label>
+            <input type="number" id="input-koreksi" class="input-field" placeholder="Contoh: 150000">
         </div>
-        
-        <button class="btn btn-primary" onclick="simpanSetting()">Simpan Pengaturan</button>
-        <button class="btn btn-secondary" style="margin-bottom:0; background-color: transparent;" onclick="tutupSetting()">Batal</button>
+        <button class="btn btn-primary" onclick="simpanKoreksi()">Simpan Penyesuaian</button>
+        <button class="btn btn-secondary" onclick="tutupSemuaModal()">Batal</button>
     </div>
 
     <script>
         let riwayatData = JSON.parse(localStorage.getItem('riwayatData')) || [];
-        let persentasePotongan = localStorage.getItem('persenTersimpan') !== null ? parseInt(localStorage.getItem('persenTersimpan')) : 10;
-        let saldo = 0;
-        let celengan = 0; 
+        let isAutoSimpanAktif = localStorage.getItem('isAutoSimpanAktif') === 'true'; 
+        let persentasePotongan = parseInt(localStorage.getItem('persenTersimpan')) || 10;
+        let saldoDompetGlobal = { 'Tunai': 0, 'Gopay': 0, 'Dana': 0, 'Jago': 0, 'BRI': 0, 'Celengan': 0 };
+        
+        let dompetYangDiedit = ""; 
+        let expenseChart; 
+        let editTrxId = null; // Penanda mode Edit
 
-        // Fungsi mendapatkan waktu sekarang format Indonesia
-        function dapatkanWaktuSekarang() {
-            let sekarang = new Date();
-            let opsi = { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' };
-            // Hasilnya akan seperti "20 Mei 2026, 19.15"
-            return sekarang.toLocaleDateString('id-ID', opsi).replace(/\./g, ':'); 
+        let kategoriData = JSON.parse(localStorage.getItem('kategoriData')) || [
+            { id: 'cat_in_1', nama: 'Hasil Narik (Ojol/Kurir)', tipe: 'pemasukan', system: true },
+            { id: 'cat_in_2', nama: 'Pemasukan Lain', tipe: 'pemasukan', system: true },
+            { id: 'cat_out_1', nama: 'Bensin & Transport', tipe: 'pengeluaran', system: true },
+            { id: 'cat_out_2', nama: 'Makan & Minum', tipe: 'pengeluaran', system: true },
+            { id: 'cat_out_3', nama: 'Perawatan & Service Motor', tipe: 'pengeluaran', system: false },
+            { id: 'cat_out_4', nama: 'Kebutuhan Anabul', tipe: 'pengeluaran', system: false },
+            { id: 'cat_out_5', nama: 'Hobi & Koleksi', tipe: 'pengeluaran', system: false },
+            { id: 'cat_transfer', nama: 'Transfer Antar Dompet', tipe: 'transfer', system: true },
+            { id: 'cat_debt_1', nama: 'Piutang (Teman Pinjam Uang)', tipe: 'piutang', system: true },
+            { id: 'cat_debt_2', nama: 'Hutang (Saya Pinjam Uang)', tipe: 'hutang', system: true },
+            { id: 'cat_out_6', nama: 'Tarik Tabungan', tipe: 'tarik_tabungan', system: true },
+            { id: 'cat_out_7', nama: 'Kebutuhan Lainnya', tipe: 'pengeluaran', system: true }
+        ];
+
+        let tglSekarang = new Date();
+        let activeMonth = tglSekarang.getMonth(); 
+        let activeYear = tglSekarang.getFullYear();
+        const namaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+        function updateJudulBulan() { document.getElementById('judul-bulan').innerText = `${namaBulan[activeMonth]} ${activeYear}`; }
+        updateJudulBulan();
+
+        function ubahBulan(arah) {
+            activeMonth += arah;
+            if (activeMonth > 11) { activeMonth = 0; activeYear++; }
+            else if (activeMonth < 0) { activeMonth = 11; activeYear--; }
+            updateJudulBulan(); muatData(); 
         }
 
-        function kalkulasiUlangSaldo() {
-            saldo = 0;
-            celengan = 0;
-            
-            let riwayatLamaKeBaru = [...riwayatData].reverse();
+        function isCurrentActiveMonth(timestamp) {
+            let tgl = new Date(timestamp);
+            return (tgl.getMonth() === activeMonth && tgl.getFullYear() === activeYear);
+        }
 
-            riwayatLamaKeBaru.forEach(trx => {
-                if (trx.kategoriAsli === 'pemasukan') {
-                    saldo += trx.nominal;
-                } else if (trx.kategoriAsli === 'auto_simpan') {
-                    saldo -= trx.nominal;
-                    celengan += trx.nominal;
-                } else if (trx.kategoriAsli === 'tarik_tabungan') {
-                    if (trx.nominal <= celengan) {
-                        celengan -= trx.nominal;
-                    } else {
-                        let sisa = trx.nominal - celengan;
-                        celengan = 0;
-                        saldo -= sisa;
+        document.getElementById('toggle-autosimpan').checked = isAutoSimpanAktif;
+        document.getElementById('menu-persen-tabungan').style.opacity = isAutoSimpanAktif ? "1" : "0.5";
+        document.getElementById('txt-persen-setting').innerText = persentasePotongan + "%";
+        document.getElementById('label-celengan').innerText = `Celengan (${persentasePotongan}%)`;
+
+        function pindahTab(namaTab, judul) {
+            if(namaTab !== 'transaksi' && namaTab !== 'setting') {
+                document.getElementById('judul-bulan').style.display = 'none';
+                document.querySelectorAll('.btn-month').forEach(el => el.style.display = 'none');
+                let h1 = document.createElement('h1'); h1.id = 'temp-judul'; h1.innerText = judul; h1.style.margin = "0";
+                let oldTemp = document.getElementById('temp-judul'); if(oldTemp) oldTemp.remove();
+                document.querySelector('.month-selector').appendChild(h1);
+            } else if(namaTab === 'setting') {
+                document.getElementById('judul-bulan').style.display = 'none';
+                document.querySelectorAll('.btn-month').forEach(el => el.style.display = 'none');
+                let h1 = document.createElement('h1'); h1.id = 'temp-judul'; h1.innerText = judul; h1.style.margin = "0";
+                let oldTemp = document.getElementById('temp-judul'); if(oldTemp) oldTemp.remove();
+                document.querySelector('.month-selector').appendChild(h1);
+            } else {
+                let oldTemp = document.getElementById('temp-judul'); if(oldTemp) oldTemp.remove();
+                document.getElementById('judul-bulan').style.display = 'block';
+                document.querySelectorAll('.btn-month').forEach(el => el.style.display = 'flex');
+            }
+
+            document.querySelectorAll('.content-area').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + namaTab).classList.add('active');
+            
+            let items = document.querySelectorAll('.floating-nav .nav-item');
+            items.forEach(el => el.classList.remove('active'));
+            
+            let indexMap = {'transaksi': 0, 'rekening': 1, 'rekap': 2, 'hutang': 3};
+            if(indexMap[namaTab] !== undefined) { items[indexMap[namaTab]].classList.add('active'); }
+
+            if(namaTab === 'rekap') { updateAnalytics(); }
+            if(namaTab === 'hutang') { renderKasbonTab(); }
+        }
+
+        function ubahStatusAutoSimpan() {
+            isAutoSimpanAktif = document.getElementById('toggle-autosimpan').checked;
+            localStorage.setItem('isAutoSimpanAktif', isAutoSimpanAktif);
+            document.getElementById('menu-persen-tabungan').style.opacity = isAutoSimpanAktif ? "1" : "0.5";
+        }
+
+        function ubahPersenTabungan() {
+            if (!isAutoSimpanAktif) return; 
+            let nilaiBaru = prompt("Persentase potongan otomatis (0-100):", persentasePotongan);
+            if (nilaiBaru !== null && !isNaN(nilaiBaru) && nilaiBaru > 0) {
+                persentasePotongan = parseInt(nilaiBaru);
+                localStorage.setItem('persenTersimpan', persentasePotongan);
+                document.getElementById('txt-persen-setting').innerText = persentasePotongan + "%";
+                document.getElementById('label-celengan').innerText = `Celengan (${persentasePotongan}%)`;
+            }
+        }
+
+        function renderDropdownKategori() {
+            let select = document.getElementById('kategori');
+            let html = "";
+            kategoriData.forEach(cat => { html += `<option value="${cat.id}">${cat.nama}</option>`; });
+            select.innerHTML = html;
+        }
+
+        function renderSettingKategori() {
+            let container = document.getElementById('setting-kategori-list');
+            let html = "";
+            kategoriData.forEach(cat => {
+                if(cat.tipe === 'transfer' || cat.tipe === 'hutang' || cat.tipe === 'piutang') return;
+                let badgeClass = cat.tipe === 'pemasukan' ? 'in' : (cat.tipe === 'tarik_tabungan' ? 'sys' : 'out');
+                let badgeLabel = cat.tipe === 'pemasukan' ? 'Masuk' : (cat.tipe === 'tarik_tabungan' ? 'Sistem' : 'Keluar');
+                let btnHapus = cat.system ? '' : `<button onclick="hapusKategoriCustom('${cat.id}')" style="background:transparent; border:none; color:var(--danger); cursor:pointer;"><i class="fas fa-trash"></i></button>`;
+                html += `<div class="mini-list-item"><div><span style="font-weight:500; margin-right:8px;">${cat.nama}</span><span class="badge ${badgeClass}">${badgeLabel}</span></div>${btnHapus}</div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function tambahKategoriCustom() {
+            let namaInput = document.getElementById('input-nama-kategori').value.trim();
+            let tipeInput = document.getElementById('input-tipe-kategori').value;
+            if(namaInput === "") { alert("Nama kategori kosong!"); return; }
+            let adaDuplikat = kategoriData.some(cat => cat.nama.toLowerCase() === namaInput.toLowerCase());
+            if(adaDuplikat) { alert("Kategori sudah ada!"); return; }
+
+            kategoriData.push({ id: 'cat_custom_' + Date.now(), nama: namaInput, tipe: tipeInput, system: false });
+            localStorage.setItem('kategoriData', JSON.stringify(kategoriData));
+            document.getElementById('input-nama-kategori').value = "";
+            renderDropdownKategori(); renderSettingKategori();
+        }
+
+        function hapusKategoriCustom(id) {
+            if(confirm("Hapus kategori ini?")) {
+                kategoriData = kategoriData.filter(cat => cat.id !== id);
+                localStorage.setItem('kategoriData', JSON.stringify(kategoriData));
+                renderDropdownKategori(); renderSettingKategori();
+            }
+        }
+
+        function cekKategori() {
+            let catId = document.getElementById('kategori').value;
+            let cat = kategoriData.find(c => c.id === catId);
+            if(cat && cat.tipe === 'transfer') {
+                document.getElementById('div-dompet-tujuan').style.display = 'block';
+                document.getElementById('label-sumber').innerText = 'Dari Dompet';
+            } else {
+                document.getElementById('div-dompet-tujuan').style.display = 'none';
+                document.getElementById('label-sumber').innerText = 'Sumber / Tujuan';
+            }
+        }
+
+        function kalkulasiUlang() {
+            let masukBulanIni = 0, keluarBulanIni = 0;
+            saldoDompetGlobal = { 'Tunai': 0, 'Gopay': 0, 'Dana': 0, 'Jago': 0, 'BRI': 0, 'Celengan': 0 };
+            
+            let riwayatReverse = [...riwayatData].reverse();
+
+            riwayatReverse.forEach(trx => {
+                let d = trx.dompet;
+                let isBulanAktif = isCurrentActiveMonth(trx.id);
+                
+                if (trx.kategoriAsli === 'pemasukan') { 
+                    if(isBulanAktif) masukBulanIni += trx.nominal; 
+                    if(saldoDompetGlobal[d] !== undefined) saldoDompetGlobal[d] += trx.nominal;
+                } 
+                else if (trx.kategoriAsli === 'auto_simpan') { 
+                    if(isBulanAktif) keluarBulanIni += trx.nominal; 
+                    saldoDompetGlobal['Celengan'] += trx.nominal;
+                    if(saldoDompetGlobal[d] !== undefined) saldoDompetGlobal[d] -= trx.nominal;
+                } 
+                else if (trx.kategoriAsli === 'tarik_tabungan') { 
+                    if(isBulanAktif) masukBulanIni += trx.nominal; 
+                    saldoDompetGlobal['Celengan'] -= trx.nominal; 
+                    if(saldoDompetGlobal[d] !== undefined) saldoDompetGlobal[d] += trx.nominal; 
+                }
+                else if (trx.kategoriAsli === 'piutang') {
+                    if(!trx.lunas) {
+                        if(saldoDompetGlobal[d] !== undefined) saldoDompetGlobal[d] -= trx.nominal;
+                        if(isBulanAktif) keluarBulanIni += trx.nominal; 
                     }
-                } else {
-                    saldo -= trx.nominal;
+                }
+                else if (trx.kategoriAsli === 'hutang') {
+                    if(!trx.lunas) {
+                        if(saldoDompetGlobal[d] !== undefined) saldoDompetGlobal[d] += trx.nominal;
+                        if(isBulanAktif) masukBulanIni += trx.nominal;
+                    }
+                }
+                else if (trx.kategoriAsli === 'transfer') {
+                    if(saldoDompetGlobal[d] !== undefined) saldoDompetGlobal[d] -= trx.nominal;
+                    if(saldoDompetGlobal[trx.dompetTujuan] !== undefined) saldoDompetGlobal[trx.dompetTujuan] += trx.nominal;
+                }
+                else if (trx.kategoriAsli === 'koreksi') {
+                    if (trx.tanda === '+') {
+                        if(isBulanAktif) masukBulanIni += trx.nominal;
+                        if(saldoDompetGlobal[d] !== undefined) saldoDompetGlobal[d] += trx.nominal;
+                    } else {
+                        if(isBulanAktif) keluarBulanIni += trx.nominal;
+                        if(saldoDompetGlobal[d] !== undefined) saldoDompetGlobal[d] -= trx.nominal;
+                    }
+                }
+                else { 
+                    if(isBulanAktif) keluarBulanIni += trx.nominal; 
+                    if(saldoDompetGlobal[d] !== undefined) saldoDompetGlobal[d] -= trx.nominal;
                 }
             });
 
-            document.getElementById('saldo-utama-text').innerText = 'Rp ' + saldo.toLocaleString('id-ID');
-            document.getElementById('celengan-text').innerText = 'Rp ' + celengan.toLocaleString('id-ID');
-            document.getElementById('judul-celengan').innerText = 'Tabungan (' + persentasePotongan + '%)';
+            document.getElementById('txt-pemasukan').innerText = 'Rp ' + masukBulanIni.toLocaleString('id-ID');
+            document.getElementById('txt-pengeluaran').innerText = 'Rp ' + keluarBulanIni.toLocaleString('id-ID');
+            document.getElementById('txt-selisih').innerText = 'Rp ' + (masukBulanIni - keluarBulanIni).toLocaleString('id-ID');
+            
+            document.getElementById('bal-tunai').innerText = 'Rp ' + saldoDompetGlobal['Tunai'].toLocaleString('id-ID');
+            document.getElementById('bal-gopay').innerText = 'Rp ' + saldoDompetGlobal['Gopay'].toLocaleString('id-ID');
+            document.getElementById('bal-dana').innerText = 'Rp ' + saldoDompetGlobal['Dana'].toLocaleString('id-ID');
+            document.getElementById('bal-jago').innerText = 'Rp ' + saldoDompetGlobal['Jago'].toLocaleString('id-ID');
+            document.getElementById('bal-bri').innerText = 'Rp ' + saldoDompetGlobal['BRI'].toLocaleString('id-ID');
+            document.getElementById('bal-celengan').innerText = 'Rp ' + saldoDompetGlobal['Celengan'].toLocaleString('id-ID');
         }
 
-        function renderRiwayatKeLayar() {
-            let html = "";
-            riwayatData.forEach(trx => {
-                // Tambahkan validasi trx.waktu untuk jaga-jaga kalau ada data lama yang belum punya waktu
-                let teksWaktu = trx.waktu ? trx.waktu : 'Waktu tidak tercatat';
+        function renderKasbonTab() {
+            let totalPiutang = 0; let totalHutang = 0; let html = "";
+            let kasbonData = riwayatData.filter(trx => trx.kategoriAsli === 'hutang' || trx.kategoriAsli === 'piutang');
 
-                html += `
-                    <div class="riwayat-item" style="border-left-color: ${trx.warnaAksen};">
-                        <div style="flex: 1;">
-                            <div class="riwayat-kategori">${trx.label}</div>
-                            <span class="riwayat-waktu">🕒 ${teksWaktu}</span>
-                            <div class="riwayat-catatan">${trx.catatan || '-'}</div>
+            if(kasbonData.length === 0) {
+                html = `<div class="empty-state"><i class="fas fa-handshake-angle"></i><p>Bebas hutang piutang untuk saat ini!</p></div>`;
+            } else {
+                kasbonData.forEach(trx => {
+                    let isPiutang = trx.kategoriAsli === 'piutang';
+                    if(!trx.lunas) {
+                        if(isPiutang) totalPiutang += trx.nominal; else totalHutang += trx.nominal;
+                    }
+
+                    let warnaAngka = isPiutang ? 'text-green' : 'text-red';
+                    let labelTipe = isPiutang ? 'PIUTANG (Teman Pinjam)' : 'HUTANG (Kamu Pinjam)';
+                    let tombolAksi = trx.lunas ? `<span class="badge-lunas">✓ Lunas</span>` : `<button class="btn-lunas" onclick="lunasiKasbon(${trx.id})">Tandai Lunas</button>`;
+
+                    html += `
+                        <div class="trx-item" style="opacity: ${trx.lunas ? 0.5 : 1};">
+                            <div class="trx-icon debt"><i class="fas fa-hand-holding-dollar"></i></div>
+                            <div class="trx-info">
+                                <div style="font-size:10px; font-weight:700; color:var(--text-dim); margin-bottom:2px;">${labelTipe}</div>
+                                <div class="trx-title">${trx.catatan || 'Tanpa Nama'}</div>
+                                <div class="trx-wallet-tag"><i class="fas fa-wallet" style="margin-right:4px;"></i>Via ${trx.dompet}</div>
+                                <br>${tombolAksi}
+                            </div>
+                            <div class="trx-amount-box">
+                                <div class="trx-amount ${warnaAngka}">Rp ${trx.nominal.toLocaleString('id-ID')}</div>
+                                <div class="action-buttons">
+                                    <button class="btn-action btn-edit" onclick="bukaFormEdit(${trx.id})"><i class="fas fa-edit"></i></button>
+                                    <button class="btn-action btn-delete" onclick="hapusTrx(${trx.id})"><i class="fas fa-times"></i></button>
+                                </div>
+                            </div>
                         </div>
-                        <div class="riwayat-nominal" style="color: ${trx.warnaAksen};">
-                            ${trx.tanda} Rp ${trx.nominal.toLocaleString('id-ID')}
-                        </div>
-                        <button class="btn-hapus" onclick="hapusSatuTransaksi(${trx.id})">&times;</button>
-                    </div>
-                `;
+                    `;
+                });
+            }
+
+            document.getElementById('txt-total-piutang').innerText = 'Rp ' + totalPiutang.toLocaleString('id-ID');
+            document.getElementById('txt-total-hutang').innerText = 'Rp ' + totalHutang.toLocaleString('id-ID');
+            document.getElementById('kasbon-list').innerHTML = html;
+        }
+
+        function lunasiKasbon(id) {
+            let index = riwayatData.findIndex(trx => trx.id === id);
+            if(index !== -1) {
+                let item = riwayatData[index];
+                if(confirm(`Konfirmasi pelunasan senilai Rp ${item.nominal.toLocaleString('id-ID')}?`)) {
+                    riwayatData[index].lunas = true;
+                    localStorage.setItem('riwayatData', JSON.stringify(riwayatData));
+                    muatData(); renderKasbonTab();
+                }
+            }
+        }
+
+        function updateAnalytics() {
+            let expenseData = {}; let totalExp = 0;
+            riwayatData.forEach(trx => {
+                if (trx.tanda === '-' && trx.kategoriAsli !== 'koreksi' && trx.kategoriAsli !== 'transfer' && trx.kategoriAsli !== 'piutang' && isCurrentActiveMonth(trx.id)) {
+                    if (!expenseData[trx.label]) { expenseData[trx.label] = 0; }
+                    expenseData[trx.label] += trx.nominal; totalExp += trx.nominal;
+                }
             });
+
+            document.getElementById('total-expense-chart').innerText = 'Rp ' + totalExp.toLocaleString('id-ID');
+            let labels = Object.keys(expenseData); let data = Object.values(expenseData);
+            let bgColors = ['#6366F1', '#F43F5E', '#10B981', '#F59E0B', '#0EA5E9', '#A855F7'];
+
+            let breakdownHTML = '';
+            if (labels.length === 0) { breakdownHTML = `<div class="empty-state"><i class="fas fa-box-open"></i><p>Belum ada pengeluaran bulan ini.</p></div>`; } 
+            else {
+                 labels.forEach((label, index) => {
+                     let amount = data[index]; let percent = totalExp > 0 ? Math.round((amount / totalExp) * 100) : 0; let color = bgColors[index % bgColors.length];
+                     breakdownHTML += `<div class="trx-item" style="border-left: 4px solid ${color};"><div style="flex: 1;"><div class="trx-title">${label}</div><div class="trx-note">${percent}% dari total pengeluaran</div></div><div class="trx-amount-box"><div class="trx-amount text-red">- Rp ${amount.toLocaleString('id-ID')}</div></div></div>`;
+                 });
+            }
+            document.getElementById('rekap-breakdown').innerHTML = breakdownHTML;
+
+            let ctx = document.getElementById('expenseChart').getContext('2d');
+            if (expenseChart) { expenseChart.destroy(); } 
+            if (labels.length > 0) {
+                Chart.defaults.color = '#94A3B8';
+                expenseChart = new Chart(ctx, {
+                    type: 'doughnut', data: { labels: labels, datasets: [{ data: data, backgroundColor: bgColors, borderWidth: 0, hoverOffset: 10 }] },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { display: false } } }
+                });
+            }
+        }
+
+        // RENDER RIWAYAT DENGAN FITUR PENCARIAN & EDIT
+        function renderRiwayat() {
+            let html = "";
+            let keyword = document.getElementById('search-trx') ? document.getElementById('search-trx').value.toLowerCase() : "";
+            
+            let dataBulanIni = riwayatData.filter(trx => isCurrentActiveMonth(trx.id));
+
+            if(keyword) {
+                dataBulanIni = dataBulanIni.filter(trx => 
+                    trx.label.toLowerCase().includes(keyword) || 
+                    (trx.catatan && trx.catatan.toLowerCase().includes(keyword))
+                );
+            }
+
+            if (dataBulanIni.length === 0) {
+                html = `<div class="empty-state"><i class="fas fa-ghost"></i><p>Tidak ada catatan ditemukan.</p></div>`;
+            } else {
+                dataBulanIni.forEach(trx => {
+                    let isKasbon = (trx.kategoriAsli === 'hutang' || trx.kategoriAsli === 'piutang');
+                    let isTransfer = (trx.kategoriAsli === 'transfer');
+                    
+                    let badgeTanda = trx.tanda; let warnaAngka = 'text-dim';
+                    if(trx.tanda === '+') warnaAngka = 'text-green';
+                    if(trx.tanda === '-') warnaAngka = 'text-red';
+                    if(isKasbon || isTransfer) warnaAngka = 'var(--text-main)';
+
+                    let iconClass = trx.tanda === '+' ? 'fa-arrow-down in' : 'fa-arrow-up out';
+                    if(isKasbon) iconClass = 'fa-hand-holding-dollar debt';
+                    if(isTransfer) iconClass = 'fa-exchange-alt sys';
+                    
+                    let walletTagText = isTransfer ? `${trx.dompet} <i class="fas fa-arrow-right" style="margin:0 2px;"></i> ${trx.dompetTujuan}` : trx.dompet;
+                    let tglTrx = new Date(trx.id);
+                    let formatTgl = tglTrx.toLocaleDateString('id-ID', {day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit'});
+
+                    html += `
+                        <div class="trx-item" style="opacity: ${trx.lunas ? 0.4 : 1}">
+                            <div class="trx-icon ${iconClass.split(' ')[1]}"><i class="fas ${iconClass.split(' ')[0]}"></i></div>
+                            <div class="trx-info">
+                                <div class="trx-title">${trx.label} ${trx.lunas ? '(Lunas)' : ''}</div>
+                                <div class="trx-date">${formatTgl.replace('.',':')}</div>
+                                <div class="trx-note">${trx.catatan || 'Tanpa catatan'}</div>
+                                <div class="trx-wallet-tag"><i class="fas fa-wallet" style="margin-right:4px;"></i>${walletTagText}</div>
+                            </div>
+                            <div class="trx-amount-box">
+                                <div class="trx-amount ${warnaAngka}">${badgeTanda} Rp ${trx.nominal.toLocaleString('id-ID')}</div>
+                                <div class="action-buttons">
+                                    <button class="btn-action btn-edit" onclick="bukaFormEdit(${trx.id})"><i class="fas fa-edit"></i></button>
+                                    <button class="btn-action btn-delete" onclick="hapusTrx(${trx.id})"><i class="fas fa-times"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
             document.getElementById('riwayat-list').innerHTML = html;
         }
 
-        function muatDataAwal() {
-            kalkulasiUlangSaldo();
-            renderRiwayatKeLayar();
-        }
-        muatDataAwal();
+        function muatData() { kalkulasiUlang(); renderRiwayat(); updateAnalytics(); }
+        renderDropdownKategori(); renderSettingKategori(); muatData();
 
-        function bukaForm() { document.getElementById('overlay').style.display = 'block'; document.getElementById('formModal').style.display = 'block'; }
-        function tutupForm() { document.getElementById('overlay').style.display = 'none'; document.getElementById('formModal').style.display = 'none'; }
-        function bukaSetting() { document.getElementById('input-persentase').value = persentasePotongan; document.getElementById('overlay').style.display = 'block'; document.getElementById('settingModal').style.display = 'block'; }
-        function tutupSetting() { document.getElementById('overlay').style.display = 'none'; document.getElementById('settingModal').style.display = 'none'; }
-
-        function simpanSetting() {
-            let nilaiBaru = parseInt(document.getElementById('input-persentase').value);
-            if (isNaN(nilaiBaru) || nilaiBaru < 0 || nilaiBaru > 100) { alert("Masukkan angka 0-100!"); return; }
-            persentasePotongan = nilaiBaru;
-            localStorage.setItem('persenTersimpan', persentasePotongan); 
-            kalkulasiUlangSaldo();
-            tutupSetting();
+        function tutupSemuaModal() { 
+            document.getElementById('overlay').style.display = 'none'; 
+            document.getElementById('formModal').style.display = 'none'; 
+            document.getElementById('modalKoreksi').style.display = 'none';
+            editTrxId = null; 
+            document.getElementById('form-title').innerText = "Catat Transaksi";
         }
 
+        function bukaFormTransaksi() { 
+            editTrxId = null;
+            document.getElementById('form-title').innerText = "Catat Transaksi";
+            document.getElementById('nominal').value = ''; 
+            document.getElementById('catatan').value = '';
+            cekKategori(); 
+            document.getElementById('overlay').style.display = 'block'; 
+            document.getElementById('formModal').style.display = 'block'; 
+        }
+
+        // FUNGSI BARU: BUKA FORM DALAM MODE EDIT
+        function bukaFormEdit(id) {
+            let trx = riwayatData.find(t => t.id === id);
+            if(!trx) return;
+
+            editTrxId = id;
+            document.getElementById('form-title').innerText = "Edit Transaksi";
+            document.getElementById('nominal').value = trx.nominal;
+            document.getElementById('catatan').value = trx.catatan || "";
+            document.getElementById('dompet').value = trx.dompet;
+            
+            // Cari Select Option Kategori yang pas
+            let catObj = kategoriData.find(c => c.nama === trx.label && c.tipe === trx.kategoriAsli);
+            if(catObj) { document.getElementById('kategori').value = catObj.id; }
+            
+            cekKategori();
+            if(trx.kategoriAsli === 'transfer' && trx.dompetTujuan) {
+                document.getElementById('dompet-tujuan').value = trx.dompetTujuan;
+            }
+
+            document.getElementById('overlay').style.display = 'block'; 
+            document.getElementById('formModal').style.display = 'block'; 
+        }
+
+        function bukaModalKoreksi(namaDompet) {
+            dompetYangDiedit = namaDompet; let saldoSaatIni = saldoDompetGlobal[namaDompet] || 0;
+            document.getElementById('koreksi-info').innerHTML = `Saldo sistem untuk dompet <strong>${namaDompet}</strong> saat ini adalah <strong>Rp ${saldoSaatIni.toLocaleString('id-ID')}</strong>.`;
+            document.getElementById('input-koreksi').value = saldoSaatIni;
+            document.getElementById('overlay').style.display = 'block'; document.getElementById('modalKoreksi').style.display = 'block';
+        }
+
+        function simpanKoreksi() {
+            let inputAsli = document.getElementById('input-koreksi').value; let saldoSaatIni = saldoDompetGlobal[dompetYangDiedit] || 0;
+            if (inputAsli.trim() !== "") {
+                let saldoSebenarnya = parseInt(inputAsli);
+                if (!isNaN(saldoSebenarnya) && saldoSebenarnya !== saldoSaatIni) {
+                    let selisih = saldoSebenarnya - saldoSaatIni;
+                    riwayatData.unshift({ id: Date.now(), kategoriAsli: 'koreksi', label: "Koreksi Sistem", catatan: `Penyesuaian manual saldo ${dompetYangDiedit}`, nominal: Math.abs(selisih), tanda: selisih > 0 ? '+' : '-', dompet: dompetYangDiedit });
+                    localStorage.setItem('riwayatData', JSON.stringify(riwayatData)); muatData();
+                }
+            }
+            tutupSemuaModal();
+        }
+
+        // FUNGSI SIMPAN TRANSAKSI (MENDUKUNG MODE EDIT)
         function simpanTransaksi() {
             let nominal = parseInt(document.getElementById('nominal').value);
-            let kategori = document.getElementById('kategori').value;
+            let catId = document.getElementById('kategori').value;
+            let dompet = document.getElementById('dompet').value; 
             let catatan = document.getElementById('catatan').value;
-            let labelKategori = document.getElementById('kategori').options[document.getElementById('kategori').selectedIndex].text;
 
-            if (isNaN(nominal) || nominal <= 0) { alert('Masukkan nominal yang valid!'); return; }
+            if (isNaN(nominal) || nominal <= 0) { alert('Nominal tidak valid!'); return; }
+            let kategoriObj = kategoriData.find(cat => cat.id === catId); if(!kategoriObj) return;
 
-            let idUnik = Date.now(); 
-            let waktuSekarang = dapatkanWaktuSekarang(); // Ambil waktu saat tombol simpan dipencet
+            let tipe = kategoriObj.tipe; let label = kategoriObj.nama;
 
-            if (kategori === 'pemasukan') {
-                riwayatData.unshift({ id: idUnik, kategoriAsli: 'pemasukan', label: labelKategori, catatan: catatan, nominal: nominal, warnaAksen: '#10B981', tanda: '+', waktu: waktuSekarang });
-
-                let potongan = nominal * (persentasePotongan / 100);
-                if (potongan > 0) { 
-                    riwayatData.unshift({ id: idUnik + 1, kategoriAsli: 'auto_simpan', label: "Auto-Simpan", catatan: `Alokasi ${persentasePotongan}%`, nominal: potongan, warnaAksen: '#059669', tanda: '-', waktu: waktuSekarang });
+            // Jika dalam mode Edit, cari index dan update
+            if (editTrxId !== null) {
+                let index = riwayatData.findIndex(t => t.id === editTrxId);
+                if (index !== -1) {
+                    riwayatData[index].nominal = nominal;
+                    riwayatData[index].label = label;
+                    riwayatData[index].kategoriAsli = tipe;
+                    riwayatData[index].dompet = dompet;
+                    riwayatData[index].catatan = catatan;
+                    
+                    if (tipe === 'transfer') {
+                        let dompetTujuan = document.getElementById('dompet-tujuan').value;
+                        if(dompet === dompetTujuan) { alert("Dompet asal dan tujuan tidak boleh sama!"); return; }
+                        riwayatData[index].dompetTujuan = dompetTujuan;
+                        riwayatData[index].tanda = '';
+                    } else if (tipe === 'pemasukan' || tipe === 'tarik_tabungan' || tipe === 'hutang') {
+                        riwayatData[index].tanda = '+';
+                    } else {
+                        riwayatData[index].tanda = '-';
+                    }
                 }
-            } 
-            else if (kategori === 'tarik_tabungan') {
-                riwayatData.unshift({ id: idUnik, kategoriAsli: 'tarik_tabungan', label: labelKategori, catatan: catatan, nominal: nominal, warnaAksen: '#EF4444', tanda: '-', waktu: waktuSekarang });
-            } 
-            else {
-                riwayatData.unshift({ id: idUnik, kategoriAsli: kategori, label: labelKategori, catatan: catatan, nominal: nominal, warnaAksen: '#EF4444', tanda: '-', waktu: waktuSekarang });
+            } else {
+                // Mode Tambah Baru
+                let id = Date.now(); 
+                if (tipe === 'transfer') {
+                    let dompetTujuan = document.getElementById('dompet-tujuan').value;
+                    if(dompet === dompetTujuan) { alert("Dompet asal dan tujuan tidak boleh sama!"); return; }
+                    riwayatData.unshift({ id: id, kategoriAsli: 'transfer', label: label, catatan: catatan, nominal: nominal, tanda: '', dompet: dompet, dompetTujuan: dompetTujuan });
+                }
+                else if (tipe === 'pemasukan') {
+                    riwayatData.unshift({ id: id, kategoriAsli: 'pemasukan', label: label, catatan: catatan, nominal: nominal, tanda: '+', dompet: dompet });
+                    if (isAutoSimpanAktif) {
+                        let potongan = nominal * (persentasePotongan / 100);
+                        if (potongan > 0) { riwayatData.unshift({ id: id + 1, kategoriAsli: 'auto_simpan', label: "Tabungan Otomatis", catatan: `Alokasi ${persentasePotongan}%`, nominal: potongan, tanda: '-', dompet: dompet }); }
+                    }
+                } else if (tipe === 'tarik_tabungan') {
+                    riwayatData.unshift({ id: id, kategoriAsli: 'tarik_tabungan', label: label, catatan: catatan, nominal: nominal, tanda: '+', dompet: dompet });
+                } else if (tipe === 'piutang') {
+                    riwayatData.unshift({ id: id, kategoriAsli: 'piutang', label: label, catatan: catatan, nominal: nominal, tanda: '-', dompet: dompet, lunas: false });
+                } else if (tipe === 'hutang') {
+                    riwayatData.unshift({ id: id, kategoriAsli: 'hutang', label: label, catatan: catatan, nominal: nominal, tanda: '+', dompet: dompet, lunas: false });
+                } else {
+                    riwayatData.unshift({ id: id, kategoriAsli: tipe, label: label, catatan: catatan, nominal: nominal, tanda: '-', dompet: dompet });
+                }
             }
 
             localStorage.setItem('riwayatData', JSON.stringify(riwayatData));
-
-            kalkulasiUlangSaldo();
-            renderRiwayatKeLayar();
-
-            document.getElementById('nominal').value = '';
-            document.getElementById('catatan').value = '';
-            tutupForm();
+            let tgl = new Date(); activeMonth = tgl.getMonth(); activeYear = tgl.getFullYear(); updateJudulBulan();
+            muatData(); tutupSemuaModal();
         }
 
-        function hapusSatuTransaksi(id) {
-            if (confirm("Yakin mau menghapus transaksi ini?")) {
+        function hapusTrx(id) {
+            if (confirm("Hapus catatan ini?")) {
                 riwayatData = riwayatData.filter(trx => trx.id !== id);
                 localStorage.setItem('riwayatData', JSON.stringify(riwayatData));
-                kalkulasiUlangSaldo();
-                renderRiwayatKeLayar();
+                muatData();
+                if(document.getElementById('tab-hutang').classList.contains('active')) { renderKasbonTab(); }
             }
         }
 
-        function resetData() {
-            if (confirm("Hapus semua data bulan ini?")) {
-                localStorage.removeItem('riwayatData');
-                riwayatData = [];
-                kalkulasiUlangSaldo();
-                renderRiwayatKeLayar();
-            }
+        function exportCSV() {
+            if(riwayatData.length === 0) { alert('Tidak ada data untuk di-export!'); return; }
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Tanggal,Kategori,Tipe,Nominal,Dompet Asal,Dompet Tujuan,Catatan,Status\r\n";
+            riwayatData.forEach(trx => {
+                let tgl = new Date(trx.id).toLocaleString('id-ID').replace(/,/g, '');
+                let note = trx.catatan ? trx.catatan.replace(/,/g, " ") : "-"; 
+                let tipeTrx = "Pengeluaran";
+                if(trx.tanda === '+') tipeTrx = "Pemasukan";
+                if(trx.kategoriAsli === 'transfer') tipeTrx = "Transfer";
+                if(trx.kategoriAsli === 'hutang' || trx.kategoriAsli === 'piutang') tipeTrx = "Kasbon";
+                let dompetAsal = trx.dompet;
+                let dompetTujuan = trx.dompetTujuan ? trx.dompetTujuan : "-";
+                let status = trx.lunas !== undefined ? (trx.lunas ? "Lunas" : "Aktif") : "-";
+                csvContent += `${tgl},${trx.label},${tipeTrx},${trx.nominal},${dompetAsal},${dompetTujuan},${note},${status}\r\n`;
+            });
+            let encodedUri = encodeURI(csvContent);
+            let link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Laporan_Keuangan_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link); link.click(); link.remove();
+        }
+
+        function backupData() {
+            if(riwayatData.length === 0) { alert('Tidak ada data!'); return; }
+            let dataStr = JSON.stringify(riwayatData); let dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            let linkElement = document.createElement('a'); linkElement.setAttribute('href', dataUri); linkElement.setAttribute('download', 'Backup_Tracker_' + new Date().toISOString().slice(0,10) + '.json');
+            document.body.appendChild(linkElement); linkElement.click(); linkElement.remove();
+        }
+
+        function restoreData(event) {
+            let file = event.target.files[0]; if(!file) return; let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let parsed = JSON.parse(e.target.result);
+                    if(Array.isArray(parsed)) {
+                        if(confirm("Timpa data saat ini dengan file backup?")) {
+                            riwayatData = parsed; localStorage.setItem('riwayatData', JSON.stringify(riwayatData));
+                            alert('Sukses dipulihkan!'); location.reload();
+                        }
+                    }
+                } catch(err) { alert('Gagal membaca file!'); }
+            }; reader.readAsText(file);
+        }
+
+        function resetData() { if (confirm("Hapus permanen semua data?")) { localStorage.clear(); location.reload(); } }
+    </script>
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('PWA Service Worker Aktif!', reg))
+                    .catch(err => console.log('PWA gagal terdaftar', err));
+            });
         }
     </script>
 </body>
